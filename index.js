@@ -1,11 +1,10 @@
 const express = require("express")
+const indexRouter = require("./routes/index")
 
 const app = express();
 
 
-app.get('/', (req, res)=>{
-    res.send('Express server workings')
-});
+app.use('/', indexRouter);
 
 
 
