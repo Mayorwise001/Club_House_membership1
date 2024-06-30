@@ -5,7 +5,8 @@ const bcrypt = require("bcrypt");
 const flash = require('connect-flash');
 const session = require("express-session");
 const LocalStrategy = require("passport-local").Strategy;
-const User = require('../models/authenticate')
+const User = require('../models/authenticate');
+const Post = require('../models/post');
 
 router.use(flash());
 router.use(passport.initialize());
@@ -14,58 +15,143 @@ router.use(passport.session());
 router.use(express.urlencoded({ extended: false }));
 
 
-
 // Make flash messages available to all views
 router.use((req, res, next) => {
     res.locals.error = req.flash('error');
     next();
 });
-router.get("/", (req, res) => {
-    res.render("index", { user: req.user });
+// router.get("/", (req, res) => {
+//     res.render("index", { user: req.user, title:"Home" });
+//   });
+  
+  router.get('/', async (req, res) => {
+    const posts = await Post.find({});
+    res.render('home', { posts, user: req.user, title:"Home"  });
+  });
+
+  router.get('/post/:id', ensureAuthenticated, async (req, res) => {
+    const post = await Post.findById(req.params.id);
+    res.render('post-details', { post, user: req.user, title:"Details"  });
+  });
+
+  function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.redirect('/login');
+  }  
+
+  router.get('/create-post', ensureAuthenticated, (req, res) => {
+    res.render('create-post', { user: req.user, title:"Create post" });
   });
   
-router.post(
-    "/log-in",
-    passport.authenticate("local", {
-    successRedirect: "/",
-    failureRedirect: "/",
-    failureFlash: true // Enable flash messages
-    })
-  );
+  router.post('/create-post', ensureAuthenticated, async (req, res) => {
+    const { title, body } = req.body;
   
+    try {
+      const newPost = new Post({
+        title,
+        body,
+        username: req.user.username,
+        createdAt: new Date()
+      });
+  
+      await newPost.save();
+      res.redirect('/');
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  
+  function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.redirect('/login');
+  }
 
-router.get("/sign-up", (req, res) => res.render("sign-up-form"));
+
+
+
+
+router.get("/sign-up", (req, res) => {
+    res.render("sign-up-form", {error: req.query.error , title:"Sign-Up Form",  user: req.user})
+})
 
 router.post('/sign-up',async (req, res) => {
-    const { username, password} = req.body;
+    const { firstName, lastName, address, phone, email, password, confirmPassword } = req.body;
+    const username = `${firstName}${lastName}`.toLowerCase();
 
-    const newProduct = new User({
-        username, 
-        password
-    });
-    bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
-        // if err, do something
-        // otherwise, store hashedPassword in DB
-     
-      
-        try {
-            // Hash the password
-            const hashedPassword = await bcrypt.hash(password, 10);
-    
-            // Create a new user with the hashed password
-            const newUser = new User({
-                username,
-                password: hashedPassword
-            });
-    
-            // Save the user to the database
-            const savedUser = await newUser.save();
-    
-            res.redirect('/');
-        } catch (err) {
-            res.status(400).json({ error: err.message });
+    if (password !== confirmPassword) {
+        return res.render('sign-up-form', { error: 'Passwords do not match' });
+      }
+    try {
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.render('sign-up-form', { error: 'Username already exists' , title:"Sign-Up Form", user: req.user });
         }
+
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            return res.render('sign-up-form', { error: 'Email already exists', title: "Sign-Up Form", user: req.user });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({
+            username,
+            firstName,
+            lastName,
+            address,
+            phone,
+            email,
+            password: hashedPassword
+        });
+
+        await newUser.save();
+        res.redirect('/');
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
 });
+
+router.get('/login', (req, res) => {
+    res.render('login', {title:"Login", user: req.user, error: req.query.error});
+  });
+  
+//   router.post(
+//     '/login',
+//     passport.authenticate('local', {
+//       failureRedirect: '/login',
+//       failureFlash: true
+//     }),
+//     (req, res) => {
+//       // If authentication succeeds, redirect to the home page or another appropriate route 
+//     res.redirect('/');
+//     }
+//   );
+
+
+router.post('/login', async (req, res, next) => {
+    const { username, password } = req.body;
+    try {
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.render('login', { title: "Login", error: "Incorrect username", user: req.user });
+        };
+
+        const match = await bcrypt.compare(password, user.password);
+if (!match) {
+  // passwords do not match!
+  return res.render('login', { title: "Login", error: "Incorrect password", user: req.user });
+}
+
+req.login(user, function(err) {
+    if (err) { return next(err); }
+    return res.redirect('/');
+});
+
+ } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
 });
 
 router.get("/log-out", (req, res, next) => {

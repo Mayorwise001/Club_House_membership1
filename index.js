@@ -1,12 +1,16 @@
 const express = require("express")
 const path = require("path");
 const indexRouter = require('./routes/index')
+const bodyParser = require("body-parser");
+const logger = require('morgan');
 
-const flash = require('connect-flash');
-const passport = require("passport");
+
+
 
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+
+
+
 
 const mongoDb = "mongodb+srv://tomosorijosephmayowa:MongoPass@cluster0.r54f38d.mongodb.net/authentication?retryWrites=true&w=majority&appName=Cluster0";
 mongoose.connect(mongoDb);
@@ -26,7 +30,19 @@ app.set('view engine', 'ejs');
 app.use('/', indexRouter);
 
 
+// Bodyparser
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(logger('dev'));
 
+// Initialize passport and connect-flash
+
+
+
+
+
+
+// Static folder
+app.use(express.static(path.join(__dirname, "public")));
 // Start the server
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on port ${port}`));

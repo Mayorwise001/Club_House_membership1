@@ -1,0 +1,62 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    background-color: #6f42c1 !important;
+}
+
+.navbar-brand img {
+    border-radius: 50%;
+}
+
+.nav-link {
+    color: #fff !important;
+    font-size: 1.1em;
+}
+
+.nav-link:hover {
+    background-color: #5a33a3 !important;
+    border-radius: 5px;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba%280, 0, 0, 0.5%29' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+.container {
+    margin-top: 20px;
+}
+
+.card {
+    margin-bottom: 20px;
+}
+
+.card-title, .card-text {
+    color: #6f42c1;
+}
+
+.btn-primary {
+    background-color: #6f42c1;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #5a33a3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.form-container {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}

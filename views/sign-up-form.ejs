@@ -1,17 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title></title>
+  <%-include('./partials/header.ejs') %>
 </head>
 <body>
-  <h1>Sign Up</h1>
-  <form action="/sign-up" method="POST">
-    <label for="username">Username</label>
-    <input name="username" placeholder="username" type="text" />
-    <label for="password">Password</label>
-    <input name="password" type="password" />
-    <button>Sign Up</button>
-  </form>
+  <%-include('./partials/navbar.ejs') %>
+<h1 class="text-center mb-4">Sign Up</h1>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <div class="form-container">
+        <form action="/sign-up" method="POST" id="signup-form">
+            <div class="form-group mb-3">
+                <label for="firstName"><i class="fas fa-user"></i> First Name</label>
+                <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter your first name" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="lastName"><i class="fas fa-user"></i> Last Name</label>
+                <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter your last name" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="username"><i class="fas fa-user-tag"></i> Username</label>
+                <input type="text" class="form-control" id="username" name="username" readonly>
+            </div>
+            <div class="form-group mb-3">
+                <label for="address"><i class="fas fa-home"></i> Address</label>
+                <input type="text" class="form-control" id="address" name="address" placeholder="Enter your address" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
+                <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter your phone number" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="password"><i class="fas fa-lock"></i> Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="confirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
+              <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+          </div>
+            <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-user-plus"></i> Sign Up</button>
+        </form>
+    </div>
+</div>
+</div>
+<script src="./partials/usernamescript.js"></script>
+<script>
+  document.getElementById('firstName').addEventListener('input', generateUsername);
+  document.getElementById('lastName').addEventListener('input', generateUsername);
+
+  function generateUsername() {
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const username = (firstName + lastName).toLowerCase();
+    document.getElementById('username').value = username;
+  }
+</script>
 </body>
 </html>
