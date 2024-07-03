@@ -10,7 +10,7 @@ const Post = require('../models/post');
 
 router.use(flash());
 router.use(passport.initialize());
-router.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
+router.use(session({ secret: "cats", resave: true, saveUninitialized: true }));
 router.use(passport.session());
 router.use(express.urlencoded({ extended: false }));
 
@@ -27,7 +27,7 @@ const SECRET_PASSCODE = "ADMIN"; // Choose a secret passcode
   });
 
   function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated() ||req.user.isAdmin ) {
+    if (req.isAuthenticated()) {
       return next();
     }
     res.redirect('/login');
