@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('./partials/header.ejs') %>
+</head>
+<body>
+    <%- include('./partials/navbar.ejs') %>
+    <div class="container mt-5">
+  <h1>Become an Admin</h1>
+  <form action="/become-admin" method="POST">
+    <div class="form-group">
+      <label for="passcode">Enter the Secret Passcode</label>
+      <input type="password" id="passcode" name="passcode" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
+</body>
+</html>

@@ -31,6 +31,19 @@
                 <i class="bi bi-pencil-square"></i> Create Post
               </a>
             </li>
+            <% if (user.isAdmin) { %>
+              <li class="nav-item">
+                <a class="nav-link bg-danger text-white admin-status-link" href="#">
+                  Admin
+                </a>
+              </li>
+            <% } else { %>
+              <li class="nav-item">
+                <a class="nav-link" href="/become-admin">
+                  <i class="bi bi-shield-lock"></i> Become an Admin
+                </a>
+              </li>
+            <% } %>
             <li class="nav-item">
               <a class="nav-link" href="/log-out">
                 <i class="bi bi-box-arrow-right"></i> Log Out
@@ -41,3 +54,4 @@
       </div>
     </div>
   </nav>
+ 

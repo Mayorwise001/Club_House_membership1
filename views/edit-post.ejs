@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('./partials/header.ejs') %>
+</head>
+<body>
+    <%- include('./partials/navbar.ejs') %>
+    <div class="container mt-5">
+        <h1>Edit Post</h1>
+        <form action="/edit-post/<%= post._id %>" method="POST">
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="title" value="<%= post.title %>" required>
+            </div>
+            <div class="mb-3">
+                <label for="body" class="form-label">Body</label>
+                <textarea class="form-control" id="body" name="body" rows="5" required><%= post.body %></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="/post/<%= post._id %>" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <!-- Add any other necessary JavaScript files or Bootstrap scripts -->
+    <script src="/path/to/your/scripts.js"></script>
+</body>
+</html>

@@ -14,16 +14,8 @@ router.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
 router.use(passport.session());
 router.use(express.urlencoded({ extended: false }));
 
+const SECRET_PASSCODE = "ADMIN"; // Choose a secret passcode
 
-// Make flash messages available to all views
-router.use((req, res, next) => {
-    res.locals.error = req.flash('error');
-    next();
-});
-// router.get("/", (req, res) => {
-//     res.render("index", { user: req.user, title:"Home" });
-//   });
-  
   router.get('/', async (req, res) => {
     const posts = await Post.find({});
     res.render('home', { posts, user: req.user, title:"Home"  });
@@ -35,11 +27,18 @@ router.use((req, res, next) => {
   });
 
   function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
+    if (req.isAuthenticated() ||req.user.isAdmin ) {
       return next();
     }
     res.redirect('/login');
   }  
+
+  function ensureAdmin(req, res, next) {
+    if (req.isAuthenticated() && req.user.isAdmin) {
+      return next();
+    }
+    res.redirect('/');
+  }
 
   router.get('/create-post', ensureAuthenticated, (req, res) => {
     res.render('create-post', { user: req.user, title:"Create post" });
@@ -63,16 +62,56 @@ router.use((req, res, next) => {
     }
   });
   
-  function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return next();
+
+  router.get('/become-admin', ensureAuthenticated, (req, res) => {
+    res.render('become-admin', { user: req.user, title: "Become an Admin" });
+  });
+
+  router.post('/become-admin', ensureAuthenticated, async (req, res) => {
+    const { passcode } = req.body;
+  
+    if (passcode === SECRET_PASSCODE) {
+      try {
+        req.user.isAdmin = true;
+        await req.user.save();
+        res.redirect('/');
+      } catch (err) {
+        res.status(400).json({ error: err.message });
+      }
+    } else {
+      res.render('become-admin', { user: req.user, title: "Become an Admin", error: "Incorrect passcode" });
     }
-    res.redirect('/login');
-  }
+  });
 
-
-
-
+  router.get('/edit-post/:id', ensureAdmin, async (req, res) => {
+    const post = await Post.findById(req.params.id);
+    res.render('edit-post', { post, user: req.user, title: "Edit post" });
+  });
+  
+  router.post('/edit-post/:id', ensureAdmin, async (req, res) => {
+    const { title, body } = req.body;
+  
+    try {
+      const post = await Post.findById(req.params.id);
+      post.title = title;
+      post.body = body;
+      await post.save();
+      res.redirect('/post/' + req.params.id);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  
+  // Delete post
+  router.post('/delete-post/:id', ensureAdmin, async (req, res) => {
+    try {
+       await Post.findByIdAndDelete(req.params.id);
+     
+      res.redirect('/');
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
 
 router.get("/sign-up", (req, res) => {
     res.render("sign-up-form", {error: req.query.error , title:"Sign-Up Form",  user: req.user})
@@ -83,7 +122,7 @@ router.post('/sign-up',async (req, res) => {
     const username = `${firstName}${lastName}`.toLowerCase();
 
     if (password !== confirmPassword) {
-        return res.render('sign-up-form', { error: 'Passwords do not match' });
+        return res.render('sign-up-form', { error: 'Passwords do not match' , title:"Sign-Up Form", user: req.user});
       }
     try {
         const existingUser = await User.findOne({ username });
@@ -107,7 +146,7 @@ router.post('/sign-up',async (req, res) => {
         });
 
         await newUser.save();
-        res.redirect('/');
+        res.redirect('/login');
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
@@ -117,17 +156,7 @@ router.get('/login', (req, res) => {
     res.render('login', {title:"Login", user: req.user, error: req.query.error});
   });
   
-//   router.post(
-//     '/login',
-//     passport.authenticate('local', {
-//       failureRedirect: '/login',
-//       failureFlash: true
-//     }),
-//     (req, res) => {
-//       // If authentication succeeds, redirect to the home page or another appropriate route 
-//     res.redirect('/');
-//     }
-//   );
+
 
 
 router.post('/login', async (req, res, next) => {
@@ -172,9 +201,7 @@ passport.use(
         if (!user) {
           return done(null, false, { message: "Incorrect username" });
         };
-        // if (user.password !== password) {
-        //   return done(null, false, { message: "Your Password is Incorrect!" });
-        // };
+
         const match = await bcrypt.compare(password, user.password);
 if (!match) {
   // passwords do not match!

@@ -8,12 +8,18 @@
 
   <div class="container mt-5">
     <h1><%= post.title %></h1>
-    <p><strong>By:</strong> <%= post.username %></p>
+    <p><strong>Posted By:</strong> <%= post.username %></p>
     <p><strong>Posted on:</strong> <%= post.createdAt.toLocaleString() %></p>
     <div class="card">
       <div class="card-body">
         <p class="card-text"><%= post.body %></p>
       </div>
+      <% if (user && user.isAdmin) { %>
+        <form action="/delete-post/<%= post._id %>" method="POST">
+          <a href="/edit-post/<%= post._id %>"  class="btn btn-secondary">Edit</a>
+          <button type="submit" class="btn btn-primary">Delete</button>
+        </form>
+        <% } %>
     </div>
   </div>
 </body>
