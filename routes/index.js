@@ -16,6 +16,19 @@ router.use(express.urlencoded({ extended: false }));
 
 const SECRET_PASSCODE = "ADMIN"; // Choose a secret passcode
 
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/login');
+}  
+
+function ensureAdmin(req, res, next) {
+  if (req.isAuthenticated() && req.user.isAdmin) {
+    return next();
+  }
+  res.redirect('/');
+}
   router.get('/', async (req, res) => {
     const posts = await Post.find({});
     res.render('home', { posts, user: req.user, title:"Home"  });
@@ -26,19 +39,6 @@ const SECRET_PASSCODE = "ADMIN"; // Choose a secret passcode
     res.render('post-details', { post, user: req.user, title:"Details"  });
   });
 
-  function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return next();
-    }
-    res.redirect('/login');
-  }  
-
-  function ensureAdmin(req, res, next) {
-    if (req.isAuthenticated() && req.user.isAdmin) {
-      return next();
-    }
-    res.redirect('/');
-  }
 
   router.get('/create-post', ensureAuthenticated, (req, res) => {
     res.render('create-post', { user: req.user, title:"Create post" });
@@ -154,6 +154,7 @@ router.post('/sign-up',async (req, res) => {
 
 router.get('/login', (req, res) => {
     res.render('login', {title:"Login", user: req.user, error: req.query.error});
+
   });
   
 
