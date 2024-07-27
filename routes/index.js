@@ -117,39 +117,44 @@ router.get("/sign-up", (req, res) => {
     res.render("sign-up-form", {error: req.query.error , title:"Sign-Up Form",  user: req.user})
 })
 
-router.post('/sign-up',async (req, res) => {
-    const { firstName, lastName, address, phone, email, password, confirmPassword } = req.body;
-    const username = `${firstName}${lastName}`.toLowerCase();
+router.post('/sign-up', async (req, res) => {
+  const { firstName, lastName, address, phone, email, password, confirmPassword } = req.body;
+  const username = `${firstName}${lastName}`.toLowerCase();
 
-    if (password !== confirmPassword) {
-        return res.render('sign-up-form', { error: 'Passwords do not match' , title:"Sign-Up Form", user: req.user});
-      }
-    try {
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-            return res.render('sign-up-form', { error: 'Username already exists' , title:"Sign-Up Form", user: req.user });
-        }
+  if (password !== confirmPassword) {
+    return res.render('sign-up-form', { error: 'Passwords do not match', title: "Sign-Up Form", user: req.user });
+  }
 
-        const existingEmail = await User.findOne({ email });
-        if (existingEmail) {
-            return res.render('sign-up-form', { error: 'Email already exists', title: "Sign-Up Form", user: req.user });
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({
-            username,
-            firstName,
-            lastName,
-            address,
-            phone,
-            email,
-            password: hashedPassword
-        });
-
-        await newUser.save();
-        res.redirect('/login');
-    } catch (err) {
-        res.status(400).json({ error: err.message });
+  try {
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.render('sign-up-form', { error: 'Username already exists', title: "Sign-Up Form", user: req.user });
     }
+
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.render('sign-up-form', { error: 'Email already exists', title: "Sign-Up Form", user: req.user });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      username,
+      firstName,
+      lastName,
+      address,
+      phone,
+      email,
+      password: hashedPassword
+    });
+
+    await newUser.save();
+    console.log(`User ${username} signed up with hashed password: ${hashedPassword}`);
+    res.redirect('/login');
+  } catch (err) {
+    console.error(`Error during sign-up: ${err.message}`);
+    res.status(400).json({ error: err.message });
+  }
 });
 
 router.get('/login', (req, res) => {
@@ -195,26 +200,27 @@ router.get("/log-out", (req, res, next) => {
   
 
 
-passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await User.findOne({ username: username });
-        if (!user) {
-          return done(null, false, { message: "Incorrect username" });
-        };
-
-        const match = await bcrypt.compare(password, user.password);
-if (!match) {
-  // passwords do not match!
-  return done(null, false, { message: "Incorrect password" })
-}
-        return done(null, user);
-      } catch(err) {
-        return done(err);
-      };
-    })
-  );
-
+  passport.use(new LocalStrategy(async (username, password, done) => {
+    try {
+      const user = await User.findOne({ username });
+      if (!user) {
+        console.log(`Login attempt failed: Incorrect username ${username}`);
+        return done(null, false, { message: "Incorrect username" });
+      }
+  
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        console.log(`Login attempt failed: Incorrect password for username ${username}`);
+        return done(null, false, { message: "Incorrect password" });
+      }
+  
+      console.log(`User ${username} logged in successfully.`);
+      return done(null, user);
+    } catch (err) {
+      console.error(`Error during login: ${err.message}`);
+      return done(err);
+    }
+  }));
   
   passport.serializeUser((user, done) => {
     done(null, user.id);
@@ -224,9 +230,9 @@ if (!match) {
     try {
       const user = await User.findById(id);
       done(null, user);
-    } catch(err) {
+    } catch (err) {
       done(err);
-    };
+    }
   });
   
 
